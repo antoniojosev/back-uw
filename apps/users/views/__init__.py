@@ -1,0 +1,1 @@
+from apps.users.views.profile import UserProfileViewSet

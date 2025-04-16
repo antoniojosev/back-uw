@@ -1,0 +1,73 @@
+# Django #
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+
+# Si estás usando PostgreSQL
+*.pgsql
+*.psql
+
+# Si también utilizas Python y virtualenv
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Archivos de Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Herramientas de desarrollo y editores
+.idea/
+.vscode/
+*.swp
+*.swo
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Documentación generada
+docs/_build/
+site/
+
+# Caché de distribución
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+
+# Traducciones compiladas
+*.mo
+
+# Archivos estáticos recogidos de Django 
+staticfiles/
