@@ -46,11 +46,15 @@ DJANGO_APPS = [
 
 MY_APPS = [
     "apps.users",
+    "apps.wallet",
+    "apps.transaction",
+    "utils",
 ]
 
 THIRD_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",  # Añadimos esta app para gestionar el blacklisting de tokens
     "drf_yasg",
     "corsheaders",
 ]
