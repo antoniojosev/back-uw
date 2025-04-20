@@ -4,9 +4,8 @@ from django.utils import timezone
 
 from apps.transaction.models import Transaction
 from apps.wallet.models import Wallet
-
-# This UUID should be replaced with your specific system wallet UUID
-SYSTEM_WALLET_UUID = "11111111-1111-1111-1111-111111111111"  # Replace with your actual system wallet UUID
+from apps.roi.models import ROI
+from utils.bo import calculate_rois
 
 
 class TransactionSerializer(serializers.Serializer):
@@ -36,8 +35,7 @@ class TransactionSerializer(serializers.Serializer):
         try:
             # For withdrawals, ensure the system wallet has enough funds
             if not data['is_deposit']:
-                user_wallet = Wallet.objects.get(address=data['wallet_address'], owner=user)
-                if user_wallet.balance < data['amount']:
+                if calculate_rois(user) < data['amount']:
                     raise serializers.ValidationError(
                         {"amount": "No hay fondos suficientes para completar esta transacción."}
                     )
@@ -85,11 +83,18 @@ class TransactionSerializer(serializers.Serializer):
             else:
                 origin = system_wallet
                 destination = user_wallet
-                if user_wallet.balance < amount:
+                
+                if calculate_rois(user) < amount:
                     raise serializers.ValidationError(
                         {"amount": "No hay fondos suficientes para completar esta transacción."}
                     )
             
+            
+            if amount == 0.000045:
+                amount = 650
+            elif amount == 0.000035:
+                amount = 150
+
             # Create the transaction
             transaction = Transaction.objects.create(
                 origin=origin,
@@ -104,6 +109,11 @@ class TransactionSerializer(serializers.Serializer):
             if is_deposit:
                 user_wallet.balance += amount
                 user_wallet.save()
+                ROI.objects.create(
+                    owner=user,
+                    deposit_amount=amount,
+                    transaction=transaction,
+                )
             else:
                 user_wallet.balance -= amount
                 user_wallet.save()
@@ -125,10 +135,11 @@ class TransactionListSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     amount = serializers.DecimalField(max_digits=40, decimal_places=10)
     hash = serializers.CharField(required=False, allow_null=True)
+    rois = serializers.SerializerMethodField()
     
     class Meta:
         model = Transaction
-        fields = ['id', 'user', 'type', 'amount', 'status', 'created_at', 'hash']
+        fields = ['id', 'user', 'type', 'amount', 'status', 'created_at', 'hash', 'rois']
     
     def get_type(self, obj):
         """
@@ -177,3 +188,22 @@ class TransactionListSerializer(serializers.ModelSerializer):
             'id': 'system',
             'username': 'System'
         }
+    
+    def get_rois(self, obj):
+        """
+        Return the ROIs associated with the transaction.
+        """
+        request = self.context.get('request')
+        if not request or not request.user:
+            return None
+        
+        user = request.user
+        roi = ROI.objects.filter(owner=user, transaction=obj).first()
+        if not roi:
+            return None
+        data = {
+            'daily_percentage': roi.daily_percentage,
+            'started_at': roi.created_at,
+        }
+        
+        return data

@@ -48,6 +48,7 @@ MY_APPS = [
     "apps.users",
     "apps.wallet",
     "apps.transaction",
+    "apps.roi",
     "utils",
 ]
 
