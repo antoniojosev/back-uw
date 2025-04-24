@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction as db_transaction
 from django.utils import timezone
+from datetime import timedelta
 
 from apps.transaction.models import Transaction
 from apps.wallet.models import Wallet
@@ -38,6 +39,20 @@ class TransactionSerializer(serializers.Serializer):
                 if calculate_rois(user) < data['amount']:
                     raise serializers.ValidationError(
                         {"amount": "No hay fondos suficientes para completar esta transacción."}
+                    )
+                
+                # Check if user has made a withdrawal in the last 7 days
+                seven_days_ago = timezone.now() - timedelta(days=7)
+                
+                recent_withdrawal = Transaction.objects.filter(
+                    destination__owner=user,
+                    is_deposit=False,
+                    created_at__gte=seven_days_ago
+                ).exists()
+                
+                if recent_withdrawal:
+                    raise serializers.ValidationError(
+                        {"non_field_errors": "Ya has realizado un retiro en los últimos 7 días. Por favor espera."}
                     )
         except Wallet.DoesNotExist:
             raise serializers.ValidationError(
@@ -90,9 +105,9 @@ class TransactionSerializer(serializers.Serializer):
                     )
             
             
-            if amount == 0.000045:
+            if amount == 0.3:
                 amount = 650
-            elif amount == 0.000035:
+            elif amount == 0.1:
                 amount = 150
 
             # Create the transaction
@@ -207,3 +222,12 @@ class TransactionListSerializer(serializers.ModelSerializer):
         }
         
         return data
+
+
+class WithdrawalCheckSerializer(serializers.Serializer):
+    """
+    Serializer para verificar si un usuario puede realizar un retiro.
+    """
+    can_withdraw = serializers.BooleanField()
+    days_remaining = serializers.IntegerField(required=False)
+    message = serializers.CharField()

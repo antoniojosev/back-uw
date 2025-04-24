@@ -78,9 +78,9 @@ class ROI(BaseModel):
 
     @classmethod
     def get_level_by_deposit(cls, deposit):
-        if deposit == Decimal('0.000045'):
+        if deposit == Decimal('0.3'):
             deposit = 650
-        elif deposit == Decimal('0.000035'):
+        elif deposit == Decimal('0.1'):
             deposit = 150
         if deposit >= 5000:
             return 5
@@ -101,9 +101,9 @@ class ROI(BaseModel):
             self.roi_percentage = level_config["roi_percentage"]
             self.daily_percentage = level_config["daily_percentage"]
             self.duration_seconds = level_config["duration_days"] * 24 * 60 * 60
-            if self.deposit_amount == Decimal('0.000045'):
+            if self.deposit_amount == Decimal('0.3'):
                 self.deposit_amount = 650
-            elif self.deposit_amount == Decimal('0.000035'):
+            elif self.deposit_amount == Decimal('0.1'):
                 self.deposit_amount = 150
         else:
             raise ValueError("Level configuration not found.")

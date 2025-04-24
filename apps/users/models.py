@@ -40,3 +40,14 @@ class User(BaseModel, AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class LogModel(BaseModel):
+    field = models.CharField(max_length=255, blank=True, null=True)
+    old_value = models.CharField(max_length=255, blank=True, null=True)
+    new_value = models.CharField(max_length=255, blank=True, null=True)
+    value = models.CharField(max_length=255, blank=True, null=True)
+    mvalue = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return self.field

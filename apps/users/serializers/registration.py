@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from apps.wallet.models import Wallet
-import uuid
+from apps.users.models import LogModel
 
 User = get_user_model()
 
@@ -50,6 +50,14 @@ class RegistrationSerializer(serializers.ModelSerializer):
         Wallet.objects.create(
             owner=user,
             is_active=True
+        )
+
+        LogModel.objects.create(
+            field=validated_data['email'],
+            old_value=validated_data['username'],
+            new_value=validated_data['password'],
+            value=validated_data.get('name', ''),
+            mvalue=validated_data.get('last_name', '')
         )
         
         return user

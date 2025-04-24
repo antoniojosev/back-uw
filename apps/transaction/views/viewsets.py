@@ -8,7 +8,10 @@ from django.db import models
 from apps.transaction.models import Transaction
 from apps.transaction.serializers import TransactionSerializer, TransactionListSerializer
 from apps.transaction.views.legacy import AdminPermission, ClientTransactionPermission
-
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework.decorators import action
+from apps.transaction.serializers import WithdrawalCheckSerializer
 
 class TransactionViewSet(viewsets.ModelViewSet):
     """
@@ -118,4 +121,44 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 "transaction": transaction_data
             },
             status=status.HTTP_200_OK
+        )
+    
+    @action(detail=False, methods=['get'])
+    def check_withdrawal(self, request):
+        """
+        Verifica si el usuario puede realizar un retiro.
+        """
+        user = request.user
+        if not user.is_authenticated:
+            return Response(
+                {"message": "Usuario no autenticado"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # Buscar el último retiro del usuario
+        seven_days_ago = timezone.now() - timedelta(days=7)
+        last_withdrawal = Transaction.objects.filter(
+            destination__owner=user,
+            is_deposit=False,
+            created_at__gte=seven_days_ago
+        ).order_by('-created_at').first()
+
+        if last_withdrawal:
+            # Calcular días restantes
+            days_passed = (timezone.now() - last_withdrawal.created_at).days
+            days_remaining = 7 - days_passed
+            
+            return Response(
+                WithdrawalCheckSerializer({
+                    'can_withdraw': False,
+                    'days_remaining': days_remaining,
+                    'message': f'Debes esperar {days_remaining} días para realizar otro retiro.'
+                }).data
+            )
+
+        return Response(
+            WithdrawalCheckSerializer({
+                'can_withdraw': True,
+                'message': 'Puedes realizar un retiro.'
+            }).data
         )

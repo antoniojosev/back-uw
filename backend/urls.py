@@ -17,8 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.routers import DefaultRouter
+from apps.transaction.views import TransactionViewSet
 
 from apps.users.serializers.token import CustomTokenObtainPairView
+
+router = DefaultRouter()
+router.register(r'transactions', TransactionViewSet, basename='transaction')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,4 +32,5 @@ urlpatterns = [
     path("api/v1/", include("apps.users.urls")),
     path("api/v1/transactions/", include("apps.transaction.urls")),
     path("api/v2/transactions/", include("apps.transaction.urls_v2")),
+    path('api/', include(router.urls)),
 ]
